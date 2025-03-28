@@ -1,0 +1,1 @@
+Cellpose was not working well (cannot detect long protrusions of cells) and so an RFC pixel classifier was trained on ilstik to do cell segmentation.
