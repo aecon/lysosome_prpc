@@ -14,7 +14,7 @@ from cells_propagation import segment_propagation_with_pmap
 def get_rdf(lyso, dist):
     nx,ny = lyso.shape
     L = 300  # max number of pixels away from nucleus edge
-    dx = 1
+    dx = 2
     Nbins = int(L//dx)
     rdf = np.zeros(Nbins)
     for i in numba.prange(nx):
@@ -95,9 +95,9 @@ if __name__ == "__main__":
 
     Nfiles = len(files_nuc)
 
-    output_file = "output_rdfLysosomes_%s.csv" % plate_name
-    with open(output_file, 'w') as f:
-        f.write("%s,%s,%s,%s,%s\n" % ("File", "Well", "Row", "Column", "lysosomes RDF"))
+#    output_file = "output_rdfLysosomes_%s.csv" % plate_name
+#    with open(output_file, 'w') as f:
+#        f.write("%s,%s,%s,%s,%s\n" % ("File", "Well", "Row", "Column", "lysosomes RDF"))
 
     for i in range(Nfiles):
         #if i%20==0:
@@ -157,23 +157,28 @@ if __name__ == "__main__":
 
 
         # Visualization
-        fig = plt.figure(figsize=(12,6))
+        fig = plt.figure(figsize=(26,8))
 
-        plt.subplot(1,2,1)
-        out = np.zeros(mask_lys.shape)
-        out[:,:] = np.nan
-        out[mask_lys>0] = (mask_lys*dist_nuc)[mask_lys>0]
+        plt.subplot(1,3,1)
+        out = mask_lys*dist_nuc
         import skimage.morphology
         edges = skimage.morphology.dilation(cell_labels)
+        edges = skimage.morphology.dilation(edges)
         edges[cell_labels>0] = 0
         edges[edges>0]=1
-        out[edges==1] = 0
-        plt.imshow(out, cmap="jet", vmin=0, vmax=50)
+        print(np.sum(out))
+        plt.imshow(np.ma.masked_where(out==0, out), cmap="jet", vmin=0, vmax=200)
+        plt.imshow(np.ma.masked_where(edges==0, edges), cmap='Greys_r')
+        plt.contour(np.ma.masked_where(cell_labels==0, dist_nuc), 20, colors='k')
 
-        plt.subplot(1,2,2)
+        plt.subplot(1,3,2)
+        plt.imshow(raw_cel, vmin=np.percentile(raw_cel,1), vmax=np.percentile(raw_cel,99.9))
+
+        plt.subplot(1,3,3)
         plt.plot(np.arange(0,Nbins), rdf)
         plt.xlabel("distance to nucleus (pixels)")
         plt.ylabel("lysosome area (pixels)")
+        plt.grid()
 
         plt.tight_layout()
         plt.show()

@@ -36,7 +36,7 @@ def distance_to_nucleus_of_specific_cell(nuclei_labels, cell_labels):
 def get_rdf(lyso, dist):
     nx,ny = lyso.shape
     L = 300  # max number of pixels away from nucleus edge
-    dx = 1
+    dx = 2
     Nbins = int(L//dx)
     rdf = np.zeros(Nbins)
     for i in numba.prange(nx):
@@ -116,12 +116,19 @@ def process_image(paths, shared_list, lock):
 #                f.write(",%g" % (rdf[r]))
 #            f.write("\n")
 
+        # number of nuclei
+        UniqueNucLabels = np.unique(img_nuc)
+        Nnuclei = len(UniqueNucLabels) - 1  # remove background label
+
+        CellArea = np.sum(cell_labels>0)
 
         result = {
             "File": flys,
             "Well": well,
             "Row": row,
             "Column": col,
+            "CellArea": cellArea,
+            "Ncells": Nnuclei,
             "LysosomeRDF": ",".join(map(str,rdf))}
 
         with lock:
@@ -130,7 +137,7 @@ def process_image(paths, shared_list, lock):
 
 if __name__ == "__main__":
 
-    max_workers = 4
+    max_workers = 60
 
     plate_name = "plate1"
     basedir = "/media/user/SSD2/Mariana/data_50_conditions/20x/%s_IJsplit" % plate_name
@@ -158,7 +165,7 @@ if __name__ == "__main__":
                 if i%10==0 or i==Nfiles:
                     print(f"Processed {i}/{Nfiles} images")
 
-        header = ["File", "Well", "Row", "Column", "LysosomeRDF"]
+        header = ["File", "Well", "Row", "Column", "CellArea", "Ncells", "LysosomeRDF"]
         with open(output_file, 'w', newline='\n') as f:
             writer = csv.DictWriter(f, fieldnames=header)
             writer.writeheader()
