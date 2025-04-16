@@ -74,16 +74,16 @@ def segment_propagation_with_pmap(raw_cells, pmap_cells, nuclei_labels):
     labels = watershed(field, markers=nuclei_labels, mask=mask_cells, watershed_line=True)
     labels[nuclei_mask>0] = 0
 
-    # plots
-    plt.subplot(1,4,1)
-    plt.imshow(raw_cells, vmin=np.percentile(raw_cells,5), vmax=np.percentile(raw_cells, 99.98))
-    plt.subplot(1,4,2)
-    plt.imshow(nuclei_labels)
-    plt.subplot(1,4,3)
-    plt.imshow(field, cmap='viridis_r')
-    plt.subplot(1,4,4)
-    plt.imshow(labels)
-    plt.show()
+#    # plots
+#    plt.subplot(1,4,1)
+#    plt.imshow(raw_cells, vmin=np.percentile(raw_cells,5), vmax=np.percentile(raw_cells, 99.98))
+#    plt.subplot(1,4,2)
+#    plt.imshow(nuclei_labels)
+#    plt.subplot(1,4,3)
+#    plt.imshow(field, cmap='viridis_r')
+#    plt.subplot(1,4,4)
+#    plt.imshow(labels)
+#    plt.show()
 
     return labels
 
