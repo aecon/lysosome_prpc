@@ -14,42 +14,6 @@ import plate as P
 from cells_propagation import segment_propagation_with_pmap
 
 
-#@numba.jit(nopython=True, parallel=False, fastmath=True)
-#def binary_dilation(mask, kernel):
-#    kw, kh = kernel.shape
-#    ph, pw = kh//2, kw//2
-#    h,w = mask.shape
-#
-#    padded = np.zeros((h+2*ph, w+2*pw), dtype=np.uint8)
-#    padded[ph:h+ph, pw:w+pw] = mask
-#
-#    output = np.zeros_like(mask)
-#    for i in range(h):
-#        for j in range(w):
-#            for m in range(kh):
-#                for n in range(kw):
-#                    if kernel[m,n] and padded[i+m, j+n]:
-#                        output[i,j] = 1
-#                        break
-#                if output[i,j] == 1:
-#                    break
-#    return output
-#
-#
-#
-#@numba.jit(nopython=True, parallel=True, fastmath=True)
-#def parallel_dilate_nuclei(labels, Nlabels, kernel, Ndilations):
-#    h,w = labels.shape
-#    stack = np.zeros((Nlabels, h, w), dtype=np.uint8)
-#
-#    for label in numba.prange(Nlabels):
-#        mask = (labels == (label+1)).astype(np.uint8)
-#        for _ in range(Ndilations):
-#            mask = binary_dilation(mask, kernel)
-#        stack[label] = mask
-#
-#    return stack
-
 
 def distance_from_object_edge(mask):
     dist = distance_transform_edt(mask==0)
@@ -170,10 +134,10 @@ if __name__ == "__main__":
 
     plate_name = "plate1"
     basedir = "/media/user/SSD2/Mariana/data_50_conditions/20x/%s_IJsplit" % plate_name
-    files_lys = sorted(glob.glob("%s/%s_lysosome/probabilities/*_Probabilities_.tif" % (basedir, plate_name)))[0:20]
-    files_cel = sorted(glob.glob("%s/plate1_cells/masks/*_Probabilities.tif" % (basedir)))[0:20]
-    files_raw_cel = sorted(glob.glob("%s/plate1_cells/*CH2.tif" % (basedir)))[0:20]
-    files_nuc = sorted(glob.glob("%s/nuclei_labels/*_labels.tif" % (basedir)))[0:20]
+    files_lys = sorted(glob.glob("%s/%s_lysosome/probabilities/*_Probabilities_.tif" % (basedir, plate_name)))
+    files_cel = sorted(glob.glob("%s/plate1_cells/masks/*_Probabilities.tif" % (basedir)))
+    files_raw_cel = sorted(glob.glob("%s/plate1_cells/*CH2.tif" % (basedir)))
+    files_nuc = sorted(glob.glob("%s/nuclei_labels/*_labels.tif" % (basedir)))
 
     Nfiles = len(files_nuc)
     print("Found %d files" % Nfiles)

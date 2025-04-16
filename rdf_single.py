@@ -155,21 +155,40 @@ if __name__ == "__main__":
         # rdf of lysosomes in cells
         rdf, Nbins, dx = get_rdf(mask_lys, dist_nuc) 
 
+
+        # Visualization
+        fig = plt.figure(figsize=(12,6))
+
+        plt.subplot(1,2,1)
+        out = np.zeros(mask_lys.shape)
+        out[:,:] = np.nan
+        out[mask_lys>0] = (mask_lys*dist_nuc)[mask_lys>0]
+        import skimage.morphology
+        edges = skimage.morphology.dilation(cell_labels)
+        edges[cell_labels>0] = 0
+        edges[edges>0]=1
+        out[edges==1] = 0
+        plt.imshow(out, cmap="jet", vmin=0, vmax=50)
+
+        plt.subplot(1,2,2)
         plt.plot(np.arange(0,Nbins), rdf)
         plt.xlabel("distance to nucleus (pixels)")
         plt.ylabel("lysosome area (pixels)")
+
+        plt.tight_layout()
         plt.show()
 
-        # get row, column from file name
-        well, field = flys.split("POM2")[1].split("_")[0].split("-")
-        row = well[0]
-        col = int(well[1::]) - 1
 
-        # save rdf in file
-        with open(output_file, 'a') as f:
-            f.write("\"%s\",%s,%s,%g" % (os.path.basename(flys), well, row, col ))
-            for i in range(len(rdf)):
-                f.write(",%g" % (rdf[i]))
-            f.write("\n")
+#        # get row, column from file name
+#        well, field = flys.split("POM2")[1].split("_")[0].split("-")
+#        row = well[0]
+#        col = int(well[1::]) - 1
+#
+#        # save rdf in file
+#        with open(output_file, 'a') as f:
+#            f.write("\"%s\",%s,%s,%g" % (os.path.basename(flys), well, row, col ))
+#            for i in range(len(rdf)):
+#                f.write(",%g" % (rdf[i]))
+#            f.write("\n")
 
 
