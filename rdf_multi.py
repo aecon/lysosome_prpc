@@ -65,62 +65,45 @@ def process_image(paths, shared_list, lock):
         # lysosome mask
         mask_lys = np.zeros(img_lys.shape, dtype=float)
         mask_lys[img_lys>0.5] = 1
+        sumLyso = np.sum(mask_lys)
 
         # nuclei mask
         mask_nuc = np.zeros(img_nuc.shape, dtype=float)
         mask_nuc[img_nuc>0] = 1
+        sumNuclei = np.sum(mask_nuc)
 
         # cells mask
         mask_cel = np.zeros(img_cel.shape, dtype=float)
         mask_cel[img_cel>0.5] = 1
         mask_cel = skimage.morphology.remove_small_holes(mask_cel.astype(bool, copy=True), area_threshold=400)
 
-        # distance field
-        #dist_nuc = distance_from_object_edge(mask_nuc)
-        # 
-        # distance to each cell's nucleus
-        cell_labels = segment_propagation_with_pmap(raw_cel, img_cel, img_nuc)
-        dist_nuc = distance_to_nucleus_of_specific_cell(img_nuc, cell_labels)
+        if sumNuclei>0 and sumLyso>0:
+            # distance to each cell's nucleus
+            cell_labels = segment_propagation_with_pmap(raw_cel, img_cel, img_nuc)
+            cellArea = np.sum(cell_labels>0)
+            dist_nuc = distance_to_nucleus_of_specific_cell(img_nuc, cell_labels)
 
-        # keep distance transform only inside cells
-        dist_nuc[mask_cel==0] = 0
+            # keep distance transform only inside cells
+            dist_nuc[mask_cel==0] = 0
 
-#        # plots
-#        plt.subplot(1,4,1)
-#        plt.imshow(img_nuc)
-#        plt.subplot(1,4,2)
-#        plt.imshow(cell_labels)
-#        plt.subplot(1,4,3)
-#        plt.imshow(img_lys)
-#        plt.subplot(1,4,4)
-#        plt.imshow(dist_nuc)
-#        plt.show()
-
-        # rdf of lysosomes in cells
-        rdf, Nbins, dx = get_rdf(mask_lys, dist_nuc) 
-
-#        plt.plot(np.arange(0,Nbins), rdf)
-#        plt.xlabel("distance to nucleus (pixels)")
-#        plt.ylabel("lysosome area (pixels)")
-#        plt.show()
+            # rdf of lysosomes in cells
+            rdf, Nbins, dx = get_rdf(mask_lys, dist_nuc) 
+        else:
+            rdf = np.zeros(150)
+            cellArea = np.sum(mask_cel)
 
         # get row, column from file name
         well, field = flys.split("POM2")[1].split("_")[0].split("-")
         row = well[0]
         col = int(well[1::])
 
-#        # save rdf in file
-#        with open(output_file, 'a') as f:
-#            f.write("\"%s\",%s,%s,%g" % (os.path.basename(flys), well, row, col ))
-#            for r in range(len(rdf)):
-#                f.write(",%g" % (rdf[r]))
-#            f.write("\n")
-
         # number of nuclei
-        UniqueNucLabels = np.unique(img_nuc)
-        Nnuclei = len(UniqueNucLabels) - 1  # remove background label
+        if sumNuclei>0:
+            UniqueNucLabels = np.unique(img_nuc)
+            Nnuclei = len(UniqueNucLabels) - 1  # remove background label
+        else:
+            Nnuclei = 0
 
-        cellArea = np.sum(cell_labels>0)
 
         result = {
             "File": flys,
