@@ -120,7 +120,7 @@ def process_image(paths, shared_list, lock):
         UniqueNucLabels = np.unique(img_nuc)
         Nnuclei = len(UniqueNucLabels) - 1  # remove background label
 
-        CellArea = np.sum(cell_labels>0)
+        cellArea = np.sum(cell_labels>0)
 
         result = {
             "File": flys,
@@ -137,7 +137,7 @@ def process_image(paths, shared_list, lock):
 
 if __name__ == "__main__":
 
-    max_workers = 60
+    max_workers = 100
 
     plate_name = "plate1"
     basedir = "/media/user/SSD2/Mariana/data_50_conditions/20x/%s_IJsplit" % plate_name

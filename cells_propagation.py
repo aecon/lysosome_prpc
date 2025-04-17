@@ -61,7 +61,7 @@ def segment_propagation_with_pmap(raw_cells, pmap_cells, nuclei_labels):
     inverted_01_intensity_field[nuclei_mask==1] = 0
 
     # distance field
-    assert(np.min(nuclei_mask)==0 and np.max(nuclei_mask)==1)
+    assert(np.min(nuclei_mask)==0 and np.max(nuclei_mask)<=1)
     distances = ndimage.distance_transform_edt(1.0-nuclei_mask)  # float64
     distances[distances>=MAX_DISTANCE_FROM_NUCLEI] = 0
     distances01 = rescale01(distances)
