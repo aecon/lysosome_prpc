@@ -157,24 +157,35 @@ if __name__ == "__main__":
 
 
         # Visualization
-        fig = plt.figure(figsize=(26,8))
+        # All together
+        fig = plt.figure(figsize=(26,6))
 
-        plt.subplot(1,3,1)
+        plt.subplot(1,5,1)
+        plt.imshow(np.ma.masked_where(img_nuc==0, img_nuc), vmin=0, vmax=np.max(img_nuc))
+        plt.axis('off')
+
+        plt.subplot(1,5,2)
+        plt.imshow(raw_cel, vmin=np.percentile(raw_cel,1), vmax=np.percentile(raw_cel,99.9))
+        plt.axis('off')
+
+        plt.subplot(1,5,3)
+        plt.imshow(np.ma.masked_where(cell_labels==0, cell_labels), vmin=0, vmax=np.max(cell_labels))
+        plt.axis('off')
+
+        plt.subplot(1,5,4)
         out = mask_lys*dist_nuc
         import skimage.morphology
         edges = skimage.morphology.dilation(cell_labels)
         edges = skimage.morphology.dilation(edges)
         edges[cell_labels>0] = 0
         edges[edges>0]=1
-        print(np.sum(out))
-        plt.imshow(np.ma.masked_where(out==0, out), cmap="jet", vmin=0, vmax=200)
-        plt.imshow(np.ma.masked_where(edges==0, edges), cmap='Greys_r')
-        plt.contour(np.ma.masked_where(cell_labels==0, dist_nuc), 20, colors='k')
+        out[out==0] = np.nan
+        plt.imshow(out, cmap="jet", vmin=0, vmax=200)
+        plt.axis('off')
+        #plt.imshow(np.ma.masked_where(edges==0, edges), cmap='Greys_r')
+        #plt.contour(np.ma.masked_where(cell_labels==0, dist_nuc), 20, colors='k')
 
-        plt.subplot(1,3,2)
-        plt.imshow(raw_cel, vmin=np.percentile(raw_cel,1), vmax=np.percentile(raw_cel,99.9))
-
-        plt.subplot(1,3,3)
+        plt.subplot(1,5,5)
         plt.plot(np.arange(0,Nbins), rdf)
         plt.xlabel("distance to nucleus (pixels)")
         plt.ylabel("lysosome area (pixels)")
@@ -184,6 +195,54 @@ if __name__ == "__main__":
         plt.show()
 
 
+
+        # Visualization
+        # Save separately
+        #fig = plt.figure(figsize=(26,6))
+
+        skimage.io.imsave("fig_nuclei_labels_%s_%s.tif" % (plate_name, os.path.basename(fnuc)), img_nuc, plugin='tifffile', check_contrast=False)
+        #plt.imshow(np.ma.masked_where(img_nuc==0, img_nuc), vmin=0, vmax=np.max(img_nuc))
+        #plt.axis('off')
+        #plt.savefig("fig_nuclei_labels_%s_%s.pdf" % (plate_name, os.path.basename(fnuc)))
+        #plt.close()
+
+        skimage.io.imsave("fig_cells_raw_%s_%s.tif" % (plate_name, os.path.basename(fnuc)), raw_cel, plugin='tifffile', check_contrast=False)
+        #plt.imshow(raw_cel, vmin=np.percentile(raw_cel,1), vmax=np.percentile(raw_cel,99.9))
+        #plt.axis('off')
+        #plt.savefig("fig_cells_raw_%s_%s.pdf" % (plate_name, os.path.basename(fnuc)))
+        #plt.close()
+
+        skimage.io.imsave("fig_cells_labels_%s_%s.tif" % (plate_name, os.path.basename(fnuc)), cell_labels, plugin='tifffile', check_contrast=False)
+        #plt.imshow(np.ma.masked_where(cell_labels==0, cell_labels), vmin=0, vmax=np.max(cell_labels))
+        #plt.axis('off')
+        #plt.savefig("fig_cells_labels_%s_%s.pdf" % (plate_name, os.path.basename(fnuc)))
+        #plt.close()
+
+        out = mask_lys*dist_nuc
+        skimage.io.imsave("fig_lysosome_distance_%s_%s.tif" % (plate_name, os.path.basename(fnuc)), out, plugin='tifffile', check_contrast=False)
+        #import skimage.morphology
+        #edges = skimage.morphology.dilation(cell_labels)
+        #edges = skimage.morphology.dilation(edges)
+        #edges = skimage.morphology.dilation(edges)
+        #edges[cell_labels>0] = 0
+        #edges[edges>0]=1
+        #plt.imshow(np.ma.masked_where(out==0, out), cmap="jet", vmin=0, vmax=200)
+        #plt.imshow(np.ma.masked_where(edges==0, edges), cmap='Greys_r')
+        #plt.axis('off')
+        #plt.savefig("fig_lysosome_distance_%s_%s.pdf" % (plate_name, os.path.basename(fnuc)))
+        #plt.close()
+
+        plt.plot(np.arange(0,Nbins), rdf)
+        plt.xlabel("distance to nucleus (pixels)")
+        plt.ylabel("lysosome area (pixels)")
+        plt.grid()
+        plt.tight_layout()
+        plt.savefig("fig_lysosome_rdf_%s_%s.pdf" % (plate_name, os.path.basename(fnuc)))
+        plt.close()
+
+
+
+        # save to file
 #        # get row, column from file name
 #        well, field = flys.split("POM2")[1].split("_")[0].split("-")
 #        row = well[0]
