@@ -71,7 +71,7 @@ def segment_propagation_with_pmap(raw_cells, pmap_cells, nuclei_labels):
     field[:,:] = inverted_01_intensity_field * pow(distances01, 0.5)
 
     # watershed of distance map
-    labels = watershed(field, markers=nuclei_labels, mask=mask_cells, watershed_line=True)
+    labels = watershed(field, markers=nuclei_labels, mask=mask_cells, watershed_line=False)
     labels[nuclei_mask>0] = 0
 
 #    # plots
