@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     plate_name = "plate3"
     basedir = "/media/user/SSD2/Mariana/data_50_conditions/20x/%s_IJsplit" % plate_name
-    files_lys = sorted(glob.glob("%s/%s_lysosome/probabilities/*_Probabilities_.tif" % (basedir, plate_name)))
+    files_lys = sorted(glob.glob("%s/lysosome/probabilities/*_Probabilities_.tif" % (basedir)))
     files_cel = sorted(glob.glob("%s/cells/masks/*_Probabilities.tif" % (basedir)))
     files_raw_cel = sorted(glob.glob("%s/cells/*CH2.tif" % (basedir)))
     files_nuc = sorted(glob.glob("%s/nuclei_labels/*_labels.tif" % (basedir)))
