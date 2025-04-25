@@ -48,7 +48,7 @@ def process_image(paths):
     rcel = paths[2]
     flys = paths[3]
     fprp = paths[4]
-    print(paths)
+    #print(paths)
 
     # load image files
     img_nuc = skimage.io.imread(fnuc, plugin='tifffile') # nuclei labels
@@ -99,6 +99,16 @@ def process_image(paths):
         colocalization_edge[(mask_edge==1) * (mask_prp==1)] = 1
         total_prpc_celledge = np.sum(colocalization_edge)
 
+        #plt.subplot(1,4,1)
+        #plt.imshow(raw_cel)
+        #plt.subplot(1,4,2)
+        #plt.imshow(cell_labels)
+        #plt.subplot(1,4,3)
+        #plt.imshow(edge)
+        #plt.subplot(1,4,4)
+        #plt.imshow(img_nuc)
+        #plt.show()
+
         # PrPc in Lysosome
         colocalization_lys = init_mask(img_nuc)
         mask_lys[mask_nuc==1] = 0  # ignore lysosomes that are above nucleus
@@ -123,25 +133,25 @@ def process_image(paths):
         #print(np.min(mask_all), np.max(mask_all), np.sum(mask_all), np.sum(mask_all==2)) 
         #assert(0)
 
-        plt.figure()
-        plt.subplot(1,4,1)
-        plt.imshow(mask_nuc + colocalization_nuc)
-        plt.title("%.2f" % (total_prpc_nucleus / sumPrPc * 100.))
-        plt.subplot(1,4,2)
-        plt.imshow(mask_edge + colocalization_edge)
-        plt.title("%.2f" % (total_prpc_celledge / sumPrPc * 100.))
-        plt.subplot(1,4,3)
-        plt.imshow(mask_lys + colocalization_lys)
-        plt.title("%.2f" % (total_prpc_lysosome / sumPrPc * 100.))
-        plt.subplot(1,4,4)
-        plt.imshow(mask_cytoplasm + colocalization_cytoplasm)
-        plt.title("%.2f" % (total_prpc_cytoplasm / sumPrPc * 100.))
-        plt.show()
+#        plt.figure()
+#        plt.subplot(1,4,1)
+#        plt.imshow(mask_nuc + colocalization_nuc)
+#        plt.title("%.2f" % (total_prpc_nucleus / sumPrPc * 100.))
+#        plt.subplot(1,4,2)
+#        plt.imshow(mask_edge + colocalization_edge)
+#        plt.title("%.2f" % (total_prpc_celledge / sumPrPc * 100.))
+#        plt.subplot(1,4,3)
+#        plt.imshow(mask_lys + colocalization_lys)
+#        plt.title("%.2f" % (total_prpc_lysosome / sumPrPc * 100.))
+#        plt.subplot(1,4,4)
+#        plt.imshow(mask_cytoplasm + colocalization_cytoplasm)
+#        plt.title("%.2f" % (total_prpc_cytoplasm / sumPrPc * 100.))
+#        plt.show()
 
         total_prpc = total_prpc_nucleus + total_prpc_celledge + total_prpc_lysosome + total_prpc_cytoplasm
-        print("Total prpc inside entire cells:", sumPrPc, sumPrPc.dtype)
-        print(total_prpc_nucleus, total_prpc_celledge, total_prpc_lysosome, total_prpc_cytoplasm)
-        print("Sum of prpc  / Total prpc:", total_prpc/sumPrPc )
+        #print("Total prpc inside entire cells:", sumPrPc, sumPrPc.dtype)
+        #print(total_prpc_nucleus, total_prpc_celledge, total_prpc_lysosome, total_prpc_cytoplasm)
+        #print("Sum of prpc  / Total prpc:", total_prpc/sumPrPc )
         assert(total_prpc == sumPrPc)
 
     else:
