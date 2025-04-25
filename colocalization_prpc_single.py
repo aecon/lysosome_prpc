@@ -52,9 +52,9 @@ def process_image(paths):
 
     # load image files
     img_nuc = skimage.io.imread(fnuc, plugin='tifffile') # nuclei labels
-    img_cel = skimage.io.imread(fcel, plugin='tifffile').astype(float)
-    img_lys = skimage.io.imread(flys, plugin='tifffile').astype(float)
-    img_prp = skimage.io.imread(fprp, plugin='tifffile').astype(float)
+    img_cel = skimage.io.imread(fcel, plugin='tifffile').astype(float)  # probability map from ilastik
+    img_lys = skimage.io.imread(flys, plugin='tifffile').astype(float)  # probability map from ilastik
+    img_prp = skimage.io.imread(fprp, plugin='tifffile').astype(float)  # probability map from ilastik
     raw_cel = skimage.io.imread(rcel, plugin='tifffile')
 
     # nuclei mask
@@ -86,26 +86,29 @@ def process_image(paths):
 
     if sumNuclei>0 and sumPrPc>0:
         # PrPc in Nucleus
-        colocalization_nuc = (mask_nuc==1) * (mask_prp==1)
+        colocalization_nuc = init_mask(img_nuc)
+        colocalization_nuc[(mask_nuc==1) * (mask_prp==1)] = 1
         total_prpc_nucleus = np.sum(colocalization_nuc)
 
-        # PrPc in CellEdge (layer of XX pixels)
+        # PrPc in CellEdge (a layer of XX pixels)
         cell_labels = segment_propagation_with_pmap(raw_cel, img_cel, img_nuc)
         edge = get_cell_edges(cell_labels, img_nuc)
-        mask_edge = np.zeros(img_cel.shape, dtype=float)
+        mask_edge = init_mask(img_nuc)
         mask_edge[(edge>0)*(mask_nuc==0)] = 1
-        colocalization_edge = (mask_edge==1) * (mask_prp==1)
+        colocalization_edge = init_mask(img_nuc)
+        colocalization_edge[(mask_edge==1) * (mask_prp==1)] = 1
         total_prpc_celledge = np.sum(colocalization_edge)
 
         # PrPc in Lysosome
-        colocalization_lys = (mask_lys==1) * (mask_prp==1) * (mask_nuc==0)
+        colocalization_lys = init_mask(img_nuc)
+        colocalization_lys[(mask_lys==1) * (mask_prp==1)] = 1
         total_prpc_lysosome = np.sum(colocalization_lys)
 
         # PrPc in cytoplasm (rest of the cell interior)
-        idx = (mask_cel==1) * (mask_edge==0) * (mask_nuc==0) * (mask_lys==0)
-        mask_cytoplasm = np.zeros(img_cel.shape, dtype=float)
-        mask_cytoplasm[idx] = 1
-        colocalization_cytoplasm = (mask_cytoplasm>0) * (mask_prp==1)
+        mask_cytoplasm = init_mask(img_nuc)
+        mask_cytoplasm[(mask_cel==1) * (mask_edge==0) * (mask_nuc==0) * (mask_lys==0)] = 1
+        colocalization_cytoplasm = init_mask(img_nuc)
+        colocalization_cytoplasm[(mask_cytoplasm==1) * (mask_prp==1)] = 1
         total_prpc_cytoplasm = np.sum(colocalization_cytoplasm)
 
         plt.figure()
@@ -135,7 +138,7 @@ def process_image(paths):
         total_prpc_celledge = 0
         total_prpc_lysosome = 0
 
-    # number of nuclei
+    # number of nuclei and cell area
     if sumNuclei>0:
         UniqueNucLabels = np.unique(img_nuc)
         Nnuclei = len(UniqueNucLabels) - 1  # remove background label
