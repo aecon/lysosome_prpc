@@ -111,6 +111,10 @@ def process_image(paths):
         colocalization_cytoplasm[(mask_cytoplasm==1) * (mask_prp==1)] = 1
         total_prpc_cytoplasm = np.sum(colocalization_cytoplasm)
 
+        print(img_nuc.shape[0]*img_nuc.shape[1])
+        print(np.sum(mask_nuc + mask_lys + mask_edge + mask_cytoplasm))
+        assert(0)
+
         plt.figure()
         plt.subplot(1,4,1)
         plt.imshow(mask_nuc + colocalization_nuc)
