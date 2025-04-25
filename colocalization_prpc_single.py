@@ -74,12 +74,12 @@ def process_image(paths):
     # lysosome mask (inside cell or nucleus)
     mask_lys = init_mask(img_nuc)
     mask_lys[img_lys>0.5] = 1
-    mask_lys[mask_nucleus_and_cells==0] = 0
+    mask_lys[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
 
     # prpc mask (inside cell or nucleus)
     mask_prp = init_mask(img_nuc)
     mask_prp[img_prp>0.5] = 1
-    mask_prp[mask_nucleus_and_cells==0] = 0
+    mask_prp[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
 
     sumNuclei = np.sum(mask_nuc)
     sumPrPc = np.sum(mask_prp)
@@ -101,6 +101,8 @@ def process_image(paths):
 
         # PrPc in Lysosome
         colocalization_lys = init_mask(img_nuc)
+        mask_lys[mask_nuc==1] = 0  # ignore lysosomes that are above nucleus
+        mask_lys[mask_edge==1] = 0 # ignore lysosomes that are above cell edge
         colocalization_lys[(mask_lys==1) * (mask_prp==1)] = 1
         total_prpc_lysosome = np.sum(colocalization_lys)
 
@@ -111,9 +113,15 @@ def process_image(paths):
         colocalization_cytoplasm[(mask_cytoplasm==1) * (mask_prp==1)] = 1
         total_prpc_cytoplasm = np.sum(colocalization_cytoplasm)
 
-        print(img_nuc.shape[0]*img_nuc.shape[1])
-        print(np.sum(mask_nuc + mask_lys + mask_edge + mask_cytoplasm))
-        assert(0)
+        #print(float(img_nuc.shape[0])*float(img_nuc.shape[1]))
+        #mask_all = mask_nuc + mask_lys + mask_edge + mask_cytoplasm
+        #mask_outside = init_mask(img_nuc)
+        #mask_outside[mask_nucleus_and_cells==0] = 1
+        #mask_all += mask_outside
+        #plt.imshow(mask_all)
+        #plt.show()
+        #print(np.min(mask_all), np.max(mask_all), np.sum(mask_all), np.sum(mask_all==2)) 
+        #assert(0)
 
         plt.figure()
         plt.subplot(1,4,1)
@@ -133,8 +141,8 @@ def process_image(paths):
         total_prpc = total_prpc_nucleus + total_prpc_celledge + total_prpc_lysosome + total_prpc_cytoplasm
         print("Total prpc inside entire cells:", sumPrPc, sumPrPc.dtype)
         print(total_prpc_nucleus, total_prpc_celledge, total_prpc_lysosome, total_prpc_cytoplasm)
-        print( total_prpc/sumPrPc )
-        assert(0)
+        print("Sum of prpc  / Total prpc:", total_prpc/sumPrPc )
+        assert(total_prpc == sumPrPc)
 
     else:
         total_prpc_nucleus = 0
@@ -205,5 +213,4 @@ if __name__ == "__main__":
 
     for paths in zip(files_nuc, files_cel, files_raw_cel, files_lys, files_prp):
         result = process_image(paths)
-        assert(0)
 
