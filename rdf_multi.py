@@ -118,18 +118,47 @@ def process_image(paths, shared_list, lock):
             shared_list.append(result)
 
 
+def check_path(path):
+    if os.path.isfile(path):
+        return path
+    else:
+        print("File does not exist!", path)
+        sys.exit()
+   
+
 if __name__ == "__main__":
 
     max_workers = 100
 
-    plate_name = "plate3"
-    basedir = "/media/user/SSD2/Mariana/data_50_conditions/20x/%s_IJsplit" % plate_name
-    files_lys = sorted(glob.glob("%s/lysosome/probabilities/*_Probabilities_.tif" % (basedir)))
-    files_cel = sorted(glob.glob("%s/cells/masks/*_Probabilities.tif" % (basedir)))
-    files_raw_cel = sorted(glob.glob("%s/cells/*CH2.tif" % (basedir)))
-    files_nuc = sorted(glob.glob("%s/nuclei_labels/*_labels.tif" % (basedir)))
+    plate_name = "plate1"
+    basedir = "/media/user/SSD2/Mariana/PRPC/data_50_conditions/20x/%s_IJsplit" % plate_name
+    files_nuc = sorted(glob.glob("%s/CH1_nuclei/nuclei_labels/*.tif" % basedir ))
+    files_cel = []
+    files_raw_cel = []
+    files_lys = []
+    files_prp = []
+
+    for f in files_nuc:
+        b0 = os.path.basename(f)
+        b = b0.split("_labels.tif")[0]
+        
+        fcel = basedir + "/CH2_cells/probabilities_cells/" + b.split("CH1.tif")[0] + "CH2_Probabilities.tif"
+        files_cel.append(check_path(fcel))
+
+        fraw = basedir + "/CH2_cells/" + b.split("CH1.tif")[0] + "CH2.tif"
+        files_raw_cel.append(check_path(fraw))
+
+        flys = basedir + "/CH3_lysosome/probabilities/" + b.split("CH1.tif")[0] + "_Probabilities_.tif"
+        files_lys.append(check_path(flys))
+
+        fprp = basedir + "/CH4_prpc/probabilities/" + b.split("CH1.tif")[0] + "CH4_Probabilities.tif"
+        files_prp.append(check_path(fprp))
 
     Nfiles = len(files_nuc)
+    assert(len(files_lys) == Nfiles)
+    assert(len(files_prp) == Nfiles)
+    assert(len(files_cel) == Nfiles)
+    assert(len(files_raw_cel) == Nfiles)
     print("Found %d files" % Nfiles)
 
     output_file = "output_rdfLysosomes_%s.csv" % plate_name
