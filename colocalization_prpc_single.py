@@ -19,7 +19,7 @@ def distance_from_object_edge(mask):
 
 
 def get_cell_edges(cell_labels, nuclei_labels):
-    cell_edge_width = 10  # !!! in pixels
+    cell_edge_width = 8  # !!! in pixels
     Ncells = np.max(cell_labels)
     edges = np.zeros(cell_labels.shape, dtype=float)
     for label in range(1, Ncells+1):
@@ -85,68 +85,37 @@ def process_image(paths):
     sumPrPc = np.sum(mask_prp)
 
     if sumNuclei>0 and sumPrPc>0:
-        # PrPc in Nucleus
-        colocalization_nuc = init_mask(img_nuc)
-        colocalization_nuc[(mask_nuc==1) * (mask_prp==1)] = 1
-        total_prpc_nucleus = np.sum(colocalization_nuc)
-
-        # PrPc in CellEdge (a layer of XX pixels)
+        # estimate CellEdge (a layer of XX pixels)
         cell_labels = segment_propagation_with_pmap(raw_cel, img_cel, img_nuc)
         edge = get_cell_edges(cell_labels, img_nuc)
         mask_edge = init_mask(img_nuc)
-        mask_edge[(edge>0)*(mask_nuc==0)] = 1
-        colocalization_edge = init_mask(img_nuc)
-        colocalization_edge[(mask_edge==1) * (mask_prp==1)] = 1
-        total_prpc_celledge = np.sum(colocalization_edge)
+        mask_edge[(edge>0)] = 1
 
-        #plt.subplot(1,4,1)
-        #plt.imshow(raw_cel)
-        #plt.subplot(1,4,2)
-        #plt.imshow(cell_labels)
-        #plt.subplot(1,4,3)
-        #plt.imshow(edge)
-        #plt.subplot(1,4,4)
-        #plt.imshow(img_nuc)
-        #plt.show()
-
-        # PrPc in Lysosome
-        colocalization_lys = init_mask(img_nuc)
-        mask_lys[mask_nuc==1] = 0  # ignore lysosomes that are above nucleus
-        mask_lys[mask_edge==1] = 0 # ignore lysosomes that are above cell edge
-        colocalization_lys[(mask_lys==1) * (mask_prp==1)] = 1
-        total_prpc_lysosome = np.sum(colocalization_lys)
-
-        # PrPc in cytoplasm (rest of the cell interior)
+        # cell cytoplasm
         mask_cytoplasm = init_mask(img_nuc)
-        mask_cytoplasm[(mask_cel==1) * (mask_edge==0) * (mask_nuc==0) * (mask_lys==0)] = 1
-        colocalization_cytoplasm = init_mask(img_nuc)
-        colocalization_cytoplasm[(mask_cytoplasm==1) * (mask_prp==1)] = 1
-        total_prpc_cytoplasm = np.sum(colocalization_cytoplasm)
+        mask_cytoplasm[(mask_cel==1) * (mask_edge==0)] = 1
 
-        #print(float(img_nuc.shape[0])*float(img_nuc.shape[1]))
-        #mask_all = mask_nuc + mask_lys + mask_edge + mask_cytoplasm
-        #mask_outside = init_mask(img_nuc)
-        #mask_outside[mask_nucleus_and_cells==0] = 1
-        #mask_all += mask_outside
-        #plt.imshow(mask_all)
+        # map of structures
+        # 0: empty
+        # 1: nucleus
+        # 2: cytoplasm
+        # 3: cell edge
+        # 4: lysosome
+        structures_map = init_mask(img_nuc)
+
+        structures_map[mask_nuc==1] = 1
+        structures_map[mask_cytoplasm==1] = 2
+        structures_map[mask_lys==1] = 4
+        structures_map[mask_edge==1] = 3
+        structures_map[mask_nucleus_and_cells==0] = 0
+
+        #plt.imshow(structures_map)
         #plt.show()
-        #print(np.min(mask_all), np.max(mask_all), np.sum(mask_all), np.sum(mask_all==2)) 
-        #assert(0)
 
-#        plt.figure()
-#        plt.subplot(1,4,1)
-#        plt.imshow(mask_nuc + colocalization_nuc)
-#        plt.title("%.2f" % (total_prpc_nucleus / sumPrPc * 100.))
-#        plt.subplot(1,4,2)
-#        plt.imshow(mask_edge + colocalization_edge)
-#        plt.title("%.2f" % (total_prpc_celledge / sumPrPc * 100.))
-#        plt.subplot(1,4,3)
-#        plt.imshow(mask_lys + colocalization_lys)
-#        plt.title("%.2f" % (total_prpc_lysosome / sumPrPc * 100.))
-#        plt.subplot(1,4,4)
-#        plt.imshow(mask_cytoplasm + colocalization_cytoplasm)
-#        plt.title("%.2f" % (total_prpc_cytoplasm / sumPrPc * 100.))
-#        plt.show()
+        total_prpc_nucleus   = np.sum( (mask_prp==1) * (structures_map==1) )
+        total_prpc_cytoplasm = np.sum( (mask_prp==1) * (structures_map==2) )
+        total_prpc_celledge  = np.sum( (mask_prp==1) * (structures_map==3) )
+        total_prpc_lysosome  = np.sum( (mask_prp==1) * (structures_map==4) )
 
         total_prpc = total_prpc_nucleus + total_prpc_celledge + total_prpc_lysosome + total_prpc_cytoplasm
         #print("Total prpc inside entire cells:", sumPrPc, sumPrPc.dtype)
@@ -222,5 +191,6 @@ if __name__ == "__main__":
 
 
     for paths in zip(files_nuc, files_cel, files_raw_cel, files_lys, files_prp):
+        print(paths)
         result = process_image(paths)
 
