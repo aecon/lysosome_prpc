@@ -36,36 +36,39 @@ def process_image_multi(paths, shared_list, lock):
 
 if __name__ == "__main__":
 
-    plate_name = "plate3"
-    files_nuc, files_cel, files_raw_cel, files_lys, files_prp = CPS.get_path_lists(plate_name)
-    Nfiles = len(files_nuc)
+    #plate_name = "plate3"
+    for plate_name in ["plate1", "plate2", "plate3"]:
+        print("PROCESSING PLATE:", plate_name)
 
-    max_workers = 64
+        files_nuc, files_cel, files_raw_cel, files_lys, files_prp = CPS.get_path_lists(plate_name)
+        Nfiles = len(files_nuc)
 
-    output_file = "output_PrPc_localization_%s.csv" % plate_name
+        max_workers = 64
 
-    with Manager() as manager:
-        shared_list = manager.list()
-        lock = manager.Lock()
+        output_file = "output_PrPc_localization_%s.csv" % plate_name
 
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            futures = [
-                executor.submit(process_image_multi, paths, shared_list, lock)
-                for paths in zip(files_nuc, files_cel, files_raw_cel, files_lys, files_prp)
-            ]
-            for i,future in enumerate(as_completed(futures), 1):
-                future.result()
-                if i%10==0 or i==Nfiles:
-                    print(f"Processed {i}/{Nfiles} images")
+        with Manager() as manager:
+            shared_list = manager.list()
+            lock = manager.Lock()
 
-        header = ["File", "Well", "Row", "Column",
-                    "CellArea", "NucleiArea",
-                    "Ncells",
-                    "PrPc_in_DAPI", "PrPc_in_Cytoplasm", "PrPc_in_CellEdge", "PrPc_in_Lysosome"]
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                futures = [
+                    executor.submit(process_image_multi, paths, shared_list, lock)
+                    for paths in zip(files_nuc, files_cel, files_raw_cel, files_lys, files_prp)
+                ]
+                for i,future in enumerate(as_completed(futures), 1):
+                    future.result()
+                    if i%10==0 or i==Nfiles:
+                        print(f"Processed {i}/{Nfiles} images")
 
-        with open(output_file, 'w', newline='\n') as f:
-            writer = csv.DictWriter(f, fieldnames=header)
-            writer.writeheader()
-            for row in shared_list:
-                writer.writerow(row)
+            header = ["File", "Well", "Row", "Column",
+                        "CellArea", "NucleiArea",
+                        "Ncells",
+                        "PrPc_in_DAPI", "PrPc_in_Cytoplasm", "PrPc_in_CellEdge", "PrPc_in_Lysosome"]
+
+            with open(output_file, 'w', newline='\n') as f:
+                writer = csv.DictWriter(f, fieldnames=header)
+                writer.writeheader()
+                for row in shared_list:
+                    writer.writerow(row)
 
