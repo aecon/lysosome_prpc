@@ -10,6 +10,15 @@ import numba
 from cells_propagation import segment_propagation_with_pmap
 
 
+def exclude_cells_without_nucleus(cell_labels, nuclei_labels):
+    Ncells = np.max(cell_labels)
+    for label in range(1, Ncells+1):
+        idx_cells  = (cell_labels==label)
+        idx_nuclei = (nuclei_labels==label)
+        if np.sum(idx_nuclei)==0:
+            cell_labels[idx_cells] = 0
+    return cell_labels
+
 
 def distance_from_object_edge(mask):
     # replaces each foreground (non-zero) element,
@@ -60,33 +69,22 @@ def process_image(paths):
     # nuclei mask
     mask_nuc = init_mask(img_nuc)
     mask_nuc[img_nuc>0] = 1
-
-    # cells mask (excludes nucleus)
-    mask_cel = init_mask(img_nuc)
-    mask_cel[img_cel>0.5] = 1
-    mask_cel = skimage.morphology.remove_small_holes(mask_cel.astype(bool, copy=True), area_threshold=400)
-    mask_cel[mask_nuc==1] = 0
-
-    # mask of both nucleus and cells
-    mask_nucleus_and_cells = init_mask(img_nuc)
-    mask_nucleus_and_cells[(mask_nuc+mask_cel)>0] = 1
-
-    # lysosome mask (inside cell or nucleus)
-    mask_lys = init_mask(img_nuc)
-    mask_lys[img_lys>0.5] = 1
-    mask_lys[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
-
-    # prpc mask (inside cell or nucleus)
-    mask_prp = init_mask(img_nuc)
-    mask_prp[img_prp>0.5] = 1
-    mask_prp[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
-
     sumNuclei = np.sum(mask_nuc)
-    sumPrPc = np.sum(mask_prp)
 
-    if sumNuclei>0 and sumPrPc>0:
+    if sumNuclei>0:
+
+        # MASKS
+
+        # cells mask (excludes nucleus)
+        mask_cel = init_mask(img_nuc)
+        mask_cel[img_cel>0.5] = 1
+        mask_cel = skimage.morphology.remove_small_holes(mask_cel.astype(bool, copy=True), area_threshold=400)
+        mask_cel[mask_nuc==1] = 0
+
         # estimate CellEdge (a layer of XX pixels)
         cell_labels = segment_propagation_with_pmap(raw_cel, img_cel, img_nuc)
+        cell_labels = exclude_cells_without_nucleus(cell_labels, img_nuc)
+        mask_cel[cell_labels==0] = 0  # update cell mask
         edge = get_cell_edges(cell_labels, img_nuc)
         mask_edge = init_mask(img_nuc)
         mask_edge[(edge>0)] = 1
@@ -94,6 +92,24 @@ def process_image(paths):
         # cell cytoplasm
         mask_cytoplasm = init_mask(img_nuc)
         mask_cytoplasm[(mask_cel==1) * (mask_edge==0)] = 1
+
+        # mask of both nucleus and cells
+        mask_nucleus_and_cells = init_mask(img_nuc)
+        mask_nucleus_and_cells[(mask_nuc+mask_cel)>0] = 1
+
+        # lysosome mask (inside cell or nucleus)
+        mask_lys = init_mask(img_nuc)
+        mask_lys[img_lys>0.5] = 1
+        mask_lys[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
+
+        # prpc mask (inside cell or nucleus)
+        mask_prp = init_mask(img_nuc)
+        mask_prp[img_prp>0.5] = 1
+        mask_prp[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
+        sumPrPc = np.sum(mask_prp)
+
+        
+        # ALL STRUCTURES TOGETHER
 
         # map of structures
         # 0: empty
@@ -111,7 +127,12 @@ def process_image(paths):
 
         #plt.imshow(structures_map)
         #plt.show()
-
+        #
+        #output_array = np.zeros((2, img_nuc.shape[0], img_nuc.shape[1]))
+        #output_array[0,:,:] = structures_map[:,:]
+        #output_array[1,:,:] = mask_prp[:,:]
+        #skimage.io.imsave("overlay_structures_%s.tif" % os.path.basename(fprp), output_array, plugin='tifffile', check_contrast=False)
+    
         total_prpc_nucleus   = np.sum( (mask_prp==1) * (structures_map==1) )
         total_prpc_cytoplasm = np.sum( (mask_prp==1) * (structures_map==2) )
         total_prpc_celledge  = np.sum( (mask_prp==1) * (structures_map==3) )
