@@ -12,7 +12,7 @@ def process_image_multi(paths, shared_list, lock):
     total_prpc_nucleus, total_prpc_cytoplasm, total_prpc_celledge, total_prpc_lysosome, cellArea, nucleiArea, Nnuclei = CPS.process_image(paths)
 
     # get row, column from file name
-    well, field = flys.split("POM2")[1].split("_")[0].split("-")
+    well, field = paths[3].split("POM2")[1].split("_")[0].split("-")
     row = well[0]
     col = int(well[1::])
 
@@ -36,10 +36,11 @@ def process_image_multi(paths, shared_list, lock):
 
 if __name__ == "__main__":
 
-    plate_name = "plate1"
+    plate_name = "plate3"
     files_nuc, files_cel, files_raw_cel, files_lys, files_prp = CPS.get_path_lists(plate_name)
+    Nfiles = len(files_nuc)
 
-    max_workers = 1
+    max_workers = 64
 
     output_file = "output_PrPc_localization_%s.csv" % plate_name
 
