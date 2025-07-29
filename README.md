@@ -14,12 +14,22 @@ We performed 20x single plane imaging (3 replicates per hit gene, 25 fov per rep
 For those hits that show difference in c. we can then perform 100x, 3D imaging to verify the effects. 
 
 
+## Data preparation
+
+Images are acquired in the .vsi file format, as a multi-channel image with 4 channels per field of view (FOV).  
+It is convenient (for the subsequent image processing steps) to split into 4 separate images and save in .tif format.  
+This is done with the ImageJ script `split_channels.ijm`.  
+Usage: Drag and drop into ImageJ, press Run and follow the directions.
+
+
 ## Image analysis
 
 The image analysis workflow is split into two parts: segmentation and colocalization.
 
 ### Image segmentation
 Segmentation is performed to detect cell nuclei, cell cytoplasm, lysosomes and PrPc signal.  
+
+#### 20x resolution
 * nuclei: segmented using the pre-trained neural netowrk StarDist, and subsequent filters to exclude false positive/negative candidates. 
 * cytoplasm: trained a Random Forest Classifier (RFC) in ilastik to perform pixel classification. The pre-trained model Cellpose failed to detect all cells in these images, since the cells have very irregular shape.
 * lysosomes: trained a RFC model in ilastik for pixel classification.
@@ -29,6 +39,14 @@ In the cases where a RFC model was trained for pixel classification, the predict
 
 Cell edges were identified as follows:  
 TODO.
+
+
+#### 60x resolution
+* nuclei: trained a RFC model in ilastik for pixel classification. The pre-trained model StarDist gave inconsistent results. 
+* cytoplasm: trained a RFC model in ilastik for pixel classification.
+* lysosomes: trained a RFC model in ilastik for pixel classification.
+* prpc: trained a RFC model in ilastik for pixel classification.
+
 
 ### Colocalization
 TODO.

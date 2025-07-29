@@ -28,30 +28,9 @@ model = StarDist2D.from_pretrained('2D_versatile_fluo')
 
 
 # list of parameters
-# - pre process
-sigma_denoise = 2
-sigma_background = 50
-# - post process
-min_area = 300
-max_area = 15000
-
-
-def _pre_process(img0):
-    """
-    Input:
-        The original image (I)
-    Output:
-        The normalized image (In), where:
-        * In = G(s=2) / G(s=50), and
-        * G(s=a) is the result of the convolution of the original image
-          with a Gaussian filter with standard deviation, sigma=a. 
-    """
-    # takes ~1.2 sec
-    img1 = skimage.filters.gaussian(img0, sigma=sigma_denoise)
-    back = skimage.filters.gaussian(
-        img1, sigma=sigma_background, mode='nearest', preserve_range=True)
-    img = img1 / (back + 1.e-7)
-    return img
+# - post process: 60x
+min_area = 300  # 20x
+max_area = 15000  # 20x
 
 
 def _post_process(labels, img):
@@ -103,10 +82,6 @@ def _post_process(labels, img):
     return Nnuclei, labels
 
 
-#textfile = os.path.dirname(args.i[0]) + os.sep + "counts_%s.txt" % os.path.basename( os.path.dirname(args.i[0]) )
-#with open(textfile, 'a') as f:
-#    f.write("%20s %15s\n" % ("Image", "Nuclei counts"))
-
 
 for file in args.i:
 
@@ -123,23 +98,14 @@ for file in args.i:
     # read image
     img = skimage.io.imread(file, plugin='tifffile')
     
-    # pre-process
-    #img = _pre_process(img0)
-
     # segment with stardist
     labels, _ = model.predict_instances(normalize(img), predict_kwargs=dict(verbose=False))
 
     # post-processing
     Nnuclei, labels = _post_process(labels, img)
 
-#    # save counts in text file
-#    with open(textfile, 'a') as f:
-#        f.write("%20s %15d\n" % (os.path.basename(file), Nnuclei))
-
     if Nnuclei == 0:
         continue
 
     # save labels
     skimage.io.imsave(output_path, labels, plugin='tifffile', check_contrast=False)
-
-
