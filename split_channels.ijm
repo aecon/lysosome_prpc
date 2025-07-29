@@ -40,7 +40,10 @@ for (i=0; i<Nfiles; i++) {
 			run("Make Subset...", "channels="+j);
 			t1 = getTitle();
 
-			outpath = outdir + basename + "CH"+j+".tif";
+			outdir1 = outdir + "CH"+j+"/";
+			File.makeDirectory(outdir1);
+
+			outpath = outdir1 + basename + "CH"+j+".tif";
 			//print("Saving to:", outpath);
 			saveAs("Tiff",  outpath);
 			close(t1);
