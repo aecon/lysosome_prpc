@@ -56,7 +56,7 @@ def _post_process(labels, img):
         else:
             avg_brightness.append(np.mean(img[idx]))
 
-    # remove very dim objects
+    # remove very dim and very brihgt objects
     avg_brightness = np.asarray(avg_brightness)
     if len(avg_brightness) < 1:
         return 0, 0
