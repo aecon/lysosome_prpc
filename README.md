@@ -51,6 +51,8 @@ Drivers:
 2. `rdf_multi.py`  
 3. `colocalization_prpc_multi.py`  
 
+For 60x, all processing is done inside `main_60x.ipynb`.  
+
 
 # Contributors
 
