@@ -24,7 +24,7 @@ Usage: Drag and drop into ImageJ, press Run and follow the directions.
 
 ## Image analysis
 
-The image analysis workflow is split into two parts: segmentation and colocalization.
+The image analysis workflow is split into two parts: Segmentation and Colocalization.
 
 ### Image segmentation
 Segmentation is performed to detect cell nuclei, cell cytoplasm, lysosomes and PrPc signal.  
@@ -37,19 +37,19 @@ Segmentation is performed to detect cell nuclei, cell cytoplasm, lysosomes and P
 
 In the cases where a RFC model was trained for pixel classification, the predicted probability maps were thresholded at `p=0.5` to obtain the foreground.
 
-Cell edges were identified as follows:  
-TODO.
-
 
 #### 60x resolution
-* nuclei: trained a RFC model in ilastik for pixel classification. The pre-trained model StarDist gave inconsistent results. 
+* nuclei: trained a RFC model in ilastik for pixel classification. The pre-trained model StarDist gave inconsistent results (applied on plate 1). 
 * cytoplasm: trained a RFC model in ilastik for pixel classification.
 * lysosomes: trained a RFC model in ilastik for pixel classification.
 * prpc: trained a RFC model in ilastik for pixel classification.
 
 
-### Colocalization
-TODO.
+### Colocalization analysis
+Drivers:  
+1. `lysosomes.py`  
+2. `rdf_multi.py`  
+3. `colocalization_prpc_multi.py`  
 
 
 # Contributors
