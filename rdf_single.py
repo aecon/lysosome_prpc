@@ -86,14 +86,32 @@ def distance_to_nucleus_of_specific_cell(nuclei_labels, cell_labels):
 
 if __name__ == "__main__":
 
+# 20x
+    imageid = #"40536"
     plate_name = "plate1"
-    basedir = "/media/user/SSD2/Mariana/data_50_conditions/20x/%s_IJsplit" % plate_name
-    files_lys = sorted(glob.glob("%s/lysosome/probabilities/*_Probabilities_.tif" % (basedir)))
-    files_cel = sorted(glob.glob("%s/plate1_cells/masks/*_Probabilities.tif" % (basedir)))
-    files_raw_cel = sorted(glob.glob("%s/plate1_cells/*CH2.tif" % (basedir)))
-    files_nuc = sorted(glob.glob("%s/nuclei_labels/*_labels.tif" % (basedir)))
+    basedir = "/media/user/SSD2/Athena/Hao_PRPC/PRPC/data_50_conditions/20x/%s_IJsplit" % plate_name
+    files_lys = sorted(glob.glob("%s/CH3_lysosome/probabilities/*%s*_Probabilities_.tif" % (basedir, imageid)))
+    files_cel = sorted(glob.glob("%s/CH2_cells/masks/*%s*_Probabilities.tif" % (basedir, imageid)))
+    files_raw_cel = sorted(glob.glob("%s/CH2_cells/*%s*CH2.tif" % (basedir, imageid)))
+    files_nuc = sorted(glob.glob("%s/CH1_nuclei/nuclei_labels/*%s*_labels.tif" % (basedir, imageid)))
+
+# 60x: DONT USE THIS SCRIPT FOR 60x!! It assumes nuclei labels with Stardist
+#    imageid = "1323" #"40536"
+#    plate_name = "plate1"
+#    basedir = "/media/user/SSD2/Athena/Hao_PRPC/PRPC/2025-07-09_60x_3plates/20250613 Lzso50screen/60x/%s_IJsplit" % plate_name
+#    files_lys = sorted(glob.glob("%s/CH3/probabilities/*%s*_Probabilities.tif" % (basedir, imageid)))
+#    files_cel = sorted(glob.glob("%s/CH2/probabilities_cells/*%s*_Probabilities.tif" % (basedir, imageid)))
+#    files_raw_cel = sorted(glob.glob("%s/CH2/*%s*CH2.tif" % (basedir, imageid)))
+#    files_nuc = sorted(glob.glob("%s/CH1/nuclei_labels/*%s*_labels.tif" % (basedir, imageid)))
+#
+#
+
 
     Nfiles = len(files_nuc)
+    assert(Nfiles == 1)
+    print("Number of files:", Nfiles)
+    print(basedir)
+    print(files_nuc)
 
 #    output_file = "output_rdfLysosomes_%s.csv" % plate_name
 #    with open(output_file, 'w') as f:
@@ -124,7 +142,7 @@ if __name__ == "__main__":
 
         # nuclei mask
         mask_nuc = np.zeros(img_nuc.shape, dtype=float)
-        mask_nuc[img_nuc>0] = 1
+        mask_nuc[img_nuc>0] = 1   # for labels: 20x w/ Stardist
 
         # cells mask
         mask_cel = np.zeros(img_cel.shape, dtype=float)
@@ -231,6 +249,25 @@ if __name__ == "__main__":
         #plt.axis('off')
         #plt.savefig("fig_lysosome_distance_%s_%s.pdf" % (plate_name, os.path.basename(fnuc)))
         #plt.close()
+
+        # distance field
+        skimage.io.imsave("fig_distanceMapFromNucleus_%s_%s.tif" % (plate_name, os.path.basename(fnuc)), dist_nuc, plugin='tifffile', check_contrast=False)
+        
+        # colour lysosomes further than 2 pixels away with different colour (asked by Hao)
+        out = np.zeros(img_lys.shape, dtype=float)
+        out[dist_nuc<=2] = 2
+        out[dist_nuc>2] = 3
+        out[mask_lys==0] = 0
+        out[cell_labels==0] = 0
+        out[mask_nuc==1] = 1
+        skimage.io.imsave("fig_Lyso2pxFromNucleus_%s_%s.tif" % (plate_name, os.path.basename(fnuc)), out, plugin='tifffile', check_contrast=False)
+
+        # cells without nucleus edge
+        out = np.zeros(img_lys.shape, dtype=float)
+        out[:,:] = cell_labels + img_nuc
+        skimage.io.imsave("fig_FullCellsLabels_%s_%s.tif" % (plate_name, os.path.basename(fnuc)), out, plugin='tifffile', check_contrast=False)
+
+
 
         plt.plot(np.arange(0,Nbins), rdf)
         plt.xlabel("distance to nucleus (pixels)")
