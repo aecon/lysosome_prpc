@@ -13,7 +13,7 @@ import tensorflow as tf
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', type=str, required=True, nargs='+', help="tif 2D image")
+parser.add_argument('-i', type=str, required=True, nargs='+', help="list of .tif 2D images")
 args = parser.parse_args()
 
 

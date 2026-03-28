@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import plate as P
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', type=str, required=True, nargs='+', help="tif 2D image")
+parser.add_argument('-i', type=str, required=True, nargs='+', help="all .tif 2D lysosome probability maps")
 parser.add_argument('-p', type=str, required=True, help="plate name")
 args = parser.parse_args()
 
@@ -38,6 +38,9 @@ for i,file in enumerate(args.i):
 
     # save area in array
     areas[i] = area
+
+    # TODO: ADD AREAS OF THE REST OF THE STRUCTURES.. BEST ADD IN A IPYNB FILE...
+    
 
     # get well ID from file name
     well, field = file.split("POM2")[1].split("_")[0].split("-")

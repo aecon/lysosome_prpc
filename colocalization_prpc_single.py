@@ -84,6 +84,14 @@ def process_image(paths):
         # estimate CellEdge (a layer of XX pixels)
         cell_labels = segment_propagation_with_pmap(raw_cel, img_cel, img_nuc)
         cell_labels = exclude_cells_without_nucleus(cell_labels, img_nuc)
+
+        # Save image of cells labels and fill nuclei holes
+        output_array = cell_labels + img_nuc
+        output_folder = os.path.dirname(os.path.dirname(fcel)) + os.sep + "labels"
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        skimage.io.imsave("%s/%s_labels.tif" % (output_folder, ((os.path.basename(fcel)).split(".tif")[0])), output_array, plugin='tifffile', check_contrast=False)
+
         mask_cel[cell_labels==0] = 0  # update cell mask
         edge = get_cell_edges(cell_labels, img_nuc)
         mask_edge = init_mask(img_nuc)
@@ -102,11 +110,25 @@ def process_image(paths):
         mask_lys[img_lys>0.5] = 1
         mask_lys[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
 
+        # Save image of lysosome mask
+        output_array = mask_lys
+        output_folder = os.path.dirname(os.path.dirname(flys)) + os.sep + "mask"
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        skimage.io.imsave("%s/%s_mask.tif" % (output_folder, ((os.path.basename(flys)).split(".tif")[0])), output_array, plugin='tifffile', check_contrast=False)
+
         # prpc mask (inside cell or nucleus)
         mask_prp = init_mask(img_nuc)
         mask_prp[img_prp>0.5] = 1
         mask_prp[mask_nucleus_and_cells==0] = 0  # ignore signal outside cells
         sumPrPc = np.sum(mask_prp)
+
+        # Save image of prpc mask
+        output_array = mask_prp
+        output_folder = os.path.dirname(os.path.dirname(fprp)) + os.sep + "mask"
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        skimage.io.imsave("%s/%s_mask.tif" % (output_folder, ((os.path.basename(fprp)).split(".tif")[0])), output_array, plugin='tifffile', check_contrast=False)
 
         
         # ALL STRUCTURES TOGETHER
@@ -127,7 +149,7 @@ def process_image(paths):
 
         #plt.imshow(structures_map)
         #plt.show()
-        #
+
         #output_array = np.zeros((2, img_nuc.shape[0], img_nuc.shape[1]))
         #output_array[0,:,:] = structures_map[:,:]
         #output_array[1,:,:] = mask_prp[:,:]
@@ -171,7 +193,7 @@ def check_path(path):
    
 
 def get_path_lists(plate_name):
-    basedir = "/media/user/SSD2/Mariana/PRPC/data_50_conditions/20x/%s_IJsplit" % plate_name
+    basedir = "/media/user/SSD2/Athena/Hao_PRPC/PRPC/data_50_conditions/20x/%s_IJsplit" % plate_name
     files_nuc = sorted(glob.glob("%s/CH1_nuclei/nuclei_labels/*.tif" % basedir ))
     files_cel = []
     files_raw_cel = []
@@ -212,6 +234,13 @@ if __name__ == "__main__":
 
 
     for paths in zip(files_nuc, files_cel, files_raw_cel, files_lys, files_prp):
+
+#        # Process specific image:
+#        #if "41834" not in paths[0]:
+#        if "40536" not in paths[0]:
+#            continue
+
         print(paths)
+
         result = process_image(paths)
 
